@@ -27,6 +27,7 @@ expt_containers = boc.get_experiment_containers()
 # expt_containers_df = pd.DataFrame(expt_containers)
 
 # The stimuli I'm interested in are basically everything except the natural movie and natural scenes
+# If we want other stimuli, add them here.
 non_movie_stimuli = ['drifting_gratings', 'locally_sparse_noise', 'spontaneous', 'static_gratings']
 
 all_expts_df = pd.DataFrame(boc.get_ophys_experiments(stimuli=non_movie_stimuli))
@@ -44,14 +45,21 @@ specimens_df = pd.DataFrame(boc.get_cell_specimens(experiment_container_ids=all_
 # Decoding Visual Inputs From Multiple Neurons in the Human Temporal Lobe, J. Neurophys 2007, by Quiroga et al
 
 
-selectivity_S_df = pd.read_csv(os.path.join('image_selectivity_dataframe.csv'), index_col=0)
-# selectivity_S_df.head()
+selectivity_S_df = pd.read_csv(os.path.join(drive_path, '/BrainObservatory/image_selectivity_dataframe.csv'), index_col=0)
 selectivity_S_df = selectivity_S_df[['cell_specimen_id', 'selectivity_ns']]
 
 specimens_with_selectivity_S = specimens_df.merge(selectivity_S_df,how='outer', on='cell_specimen_id')
 
 # This is all cells in VISp that have a value for the specified parameters (i.e not NaN)
-discard_nan = ['selectivity_ns','osi_sg','osi_dg','time_to_peak_ns','time_to_peak_sg']
+# Discards rows NaN in the columns specified below.
+discard_nan = [
+	'selectivity_ns',
+	'osi_sg',
+	'osi_dg',
+	'time_to_peak_ns',
+	'time_to_peak_sg',
+]
 VISp_cells_with_numbers = specimens_with_selectivity_S[specimens_with_selectivity_S.area == 'VISp']
 for col_name in discard_nan:
-	VISp_cells_with_numbers = VISp_cells_with_numbers[np.abs(VISp_cells_with_numbers[col_name]) >= 0]
+	VISp_cells_with_numbers = VISp_cells_with_numbers[not np.isnan(VISp_cells_with_numbers[col_name])]
+
